@@ -39,3 +39,20 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE and editor folders
+# These contain personal preferences that should not be shared
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating system files
+Thumbs.db
+.DS_Store
+
+# Optional: npm package lock alternatives
+# Uncomment if you use yarn or pnpm instead of npm
+# yarn.lock
+# pnpm-lock.yaml
