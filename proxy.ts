@@ -1,5 +1,5 @@
-// middleware.ts
-// Middleware runs on every request before the page is rendered.
+// proxy.ts
+// Proxy runs on every request before the page is rendered.
 // We use it for two purposes:
 // 1. Add security headers to all responses
 // 2. Protect routes that require authentication
@@ -8,13 +8,13 @@ import { auth } from '@/auth'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// The middleware function is called for every request that matches
+// The proxy function is called for every request that matches
 // the matcher configuration at the bottom of this file.
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Check if user is authenticated by calling the auth function.
-  // This works in middleware because NextAuth v5 is designed to work
+  // This works in proxy because NextAuth v5 is designed to work
   // in edge runtime environments.
   const session = await auth()
 
@@ -90,7 +90,7 @@ export async function middleware(request: NextRequest) {
   return response
 }
 
-// The matcher configuration tells Next.js which routes should run middleware.
+// The matcher configuration tells Next.js which routes should run proxy.
 // We exclude static files and Next.js internal routes because those do not
 // need authentication checks or security headers (Next.js handles them).
 export const config = {
