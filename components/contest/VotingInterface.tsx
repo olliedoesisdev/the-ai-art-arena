@@ -260,3 +260,4 @@ export function VotingInterface({ artworks, contestId }: VotingInterfaceProps) {
     </div>
   )
 }
+  
