@@ -10,19 +10,19 @@ import Image from 'next/image'
 
 export default async function HomePage() {
   const supabase = await createClient()
-  
+
   // Fetch the active contest
   const { data: contestData } = await supabase.rpc('get_active_contest')
-  
+
   // Fetch some statistics for social proof
   const { count: totalVotes } = await supabase
     .from('votes')
     .select('*', { count: 'exact', head: true })
-  
+
   const { count: totalContests } = await supabase
     .from('contests')
     .select('*', { count: 'exact', head: true })
-  
+
   // Transform contest data if it exists
   let activeContest = null
   if (contestData && contestData.length > 0) {
@@ -43,7 +43,7 @@ export default async function HomePage() {
         })),
     }
   }
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
       {/* Hero Section */}
@@ -53,13 +53,13 @@ export default async function HomePage() {
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-gray-900 mb-6">
             AI Art Arena
           </h1>
-          
+
           {/* Tagline */}
           <p className="text-xl sm:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Vote on stunning AI-generated artwork every week. 
-            Discover creativity at the intersection of art and technology.
+            Vote on stunning AI-generated artwork every week. Discover
+            creativity at the intersection of art and technology.
           </p>
-          
+
           {/* CTA Buttons */}
           {activeContest ? (
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -80,7 +80,7 @@ export default async function HomePage() {
             </p>
           )}
         </div>
-        
+
         {/* Statistics */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-16">
           <Card className="text-center p-8">
@@ -89,29 +89,27 @@ export default async function HomePage() {
             </div>
             <div className="text-gray-600">Total Votes Cast</div>
           </Card>
-          
+
           <Card className="text-center p-8">
             <div className="text-4xl font-bold text-purple-600 mb-2">
               {totalContests || 0}
             </div>
             <div className="text-gray-600">Contests Held</div>
           </Card>
-          
+
           <Card className="text-center p-8">
-            <div className="text-4xl font-bold text-pink-600 mb-2">
-              6
-            </div>
+            <div className="text-4xl font-bold text-pink-600 mb-2">6</div>
             <div className="text-gray-600">Artworks per Week</div>
           </Card>
         </div>
-        
+
         {/* Active Contest Preview */}
         {activeContest && (
           <div className="mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
               This Week&apos;s Contest
             </h2>
-            
+
             <Card className="p-8" hoverable>
               <Link href={`/contest/${activeContest.id}`}>
                 <div className="space-y-6">
@@ -129,10 +127,10 @@ export default async function HomePage() {
                       </p>
                     )}
                   </div>
-                  
+
                   {/* Preview Images */}
                   <div className="grid grid-cols-3 gap-4">
-                    {activeContest.artworks.map((artwork) => (
+                    {activeContest.artworks.map(artwork => (
                       <div
                         key={artwork.id}
                         className="relative aspect-square overflow-hidden rounded-lg bg-gray-100"
@@ -147,7 +145,7 @@ export default async function HomePage() {
                       </div>
                     ))}
                   </div>
-                  
+
                   {/* CTA */}
                   <div className="text-center">
                     <Button variant="primary" size="lg">
@@ -159,13 +157,13 @@ export default async function HomePage() {
             </Card>
           </div>
         )}
-        
+
         {/* How It Works Section */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
             How It Works
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="p-6 text-center">
               <div className="text-4xl mb-4">🎨</div>
@@ -173,32 +171,35 @@ export default async function HomePage() {
                 1. Browse Artworks
               </h3>
               <p className="text-gray-600">
-                Each week features 6 unique AI-generated artworks created with cutting-edge technology.
+                Each week features 6 unique AI-generated artworks created with
+                cutting-edge technology.
               </p>
             </Card>
-            
+
             <Card className="p-6 text-center">
               <div className="text-4xl mb-4">🗳️</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 2. Cast Your Vote
               </h3>
               <p className="text-gray-600">
-                Click on your favorite artwork to vote. One vote per contest, updated in real-time.
+                Click on your favorite artwork to vote. One vote per contest,
+                updated in real-time.
               </p>
             </Card>
-            
+
             <Card className="p-6 text-center">
               <div className="text-4xl mb-4">🏆</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 3. See Results
               </h3>
               <p className="text-gray-600">
-                At the end of the week, the contest closes and the winner is displayed in the archive.
+                At the end of the week, the contest closes and the winner is
+                displayed in the archive.
               </p>
             </Card>
           </div>
         </div>
-        
+
         {/* Footer CTA */}
         {activeContest && (
           <div className="text-center">
@@ -215,68 +216,4 @@ export default async function HomePage() {
 }
 
 // Enable ISR - regenerate every 5 minutes to pick up new contests
-export const revalidate = 300import Image from "next/image";
-
-export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
-}
+export const revalidate = 300
