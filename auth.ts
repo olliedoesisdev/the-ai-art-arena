@@ -5,7 +5,6 @@
 
 import NextAuth from 'next-auth'
 import GitHub from 'next-auth/providers/github'
-import Resend from 'next-auth/providers/resend'
 
 // NextAuth v5 uses a different export pattern than v4.
 // Instead of a default export with config, we export named functions
@@ -29,12 +28,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     // Resend provider sends magic link emails for passwordless authentication.
     // The flow is: user enters email -> we send email with signed link ->
     // user clicks link -> NextAuth verifies signature -> session created.
-    Resend({
-      apiKey: process.env.RESEND_API_KEY,
-      // The from address must be a verified domain in Resend.
-      // For now, this is a placeholder. You will need to verify your domain.
-      from: 'noreply@olliedoesis.dev',
-    }),
+    // NOTE: Resend provider is commented out until we add database adapter
+    // Resend({
+    //   apiKey: process.env.RESEND_API_KEY,
+    //   from: 'noreply@olliedoesis.dev',
+    // }),
   ],
 
   // Session configuration controls how user sessions are stored and managed.

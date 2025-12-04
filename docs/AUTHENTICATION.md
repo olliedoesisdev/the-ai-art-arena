@@ -3,6 +3,7 @@
 ## Overview
 
 AI Art Arena uses NextAuth v5 for authentication with two provider options:
+
 1. GitHub OAuth (social login)
 2. Email magic links (passwordless)
 
@@ -19,6 +20,7 @@ AI Art Arena uses NextAuth v5 for authentication with two provider options:
 ### Flow Diagrams
 
 #### GitHub OAuth Flow
+
 ```
 User clicks "Sign in with GitHub"
   ↓
@@ -36,6 +38,7 @@ User redirected to home page
 ```
 
 #### Magic Link Flow
+
 ```
 User enters email and clicks "Send Magic Link"
   ↓
@@ -55,6 +58,7 @@ User redirected to home page
 ## Session Management
 
 Sessions use JWT strategy rather than database storage. This means:
+
 - **Stateless**: No database queries needed to check if user is signed in
 - **Scalable**: Each request is independent
 - **Trade-off**: Cannot revoke individual sessions until they expire
@@ -64,6 +68,7 @@ Sessions expire after 30 days. Users must sign in again after expiration.
 ## Protected Routes
 
 Routes requiring authentication are configured in middleware.ts:
+
 - `/profile` - User profile page
 - `/admin` - Admin dashboard (future)
 
@@ -72,6 +77,7 @@ Attempting to access these routes without authentication redirects to `/signin`.
 ## Helper Functions
 
 ### getCurrentUser()
+
 ```typescript
 const session = await getCurrentUser()
 if (session) {
@@ -81,6 +87,7 @@ if (session) {
 ```
 
 ### requireAuth()
+
 ```typescript
 // Automatically redirects to sign-in if not authenticated
 const session = await requireAuth()
@@ -88,6 +95,7 @@ const session = await requireAuth()
 ```
 
 ### isAuth()
+
 ```typescript
 const authenticated = await isAuth()
 if (!authenticated) {
@@ -96,12 +104,14 @@ if (!authenticated) {
 ```
 
 ### getUserId()
+
 ```typescript
 const userId = await getUserId()
 // Returns user ID or null
 ```
 
 ## Environment Variables Required
+
 ```bash
 # NextAuth
 NEXTAUTH_SECRET=           # Generate with: openssl rand -base64 32
@@ -162,15 +172,18 @@ For production, create a separate OAuth app with production URLs.
 ### Common Issues
 
 **"Missing NEXTAUTH_SECRET"**
+
 - Generate secret with `openssl rand -base64 32`
 - Add to .env.local
 
 **"GitHub OAuth fails"**
+
 - Check callback URL matches exactly
 - Verify client ID and secret are correct
 - Make sure OAuth app is active on GitHub
 
 **"Magic link not received"**
+
 - Check spam folder
 - Verify domain is verified in Resend
 - Check Resend API key is correct
@@ -179,6 +192,7 @@ For production, create a separate OAuth app with production URLs.
 ## Future Enhancements
 
 Potential improvements to authentication system:
+
 - Add Google OAuth provider
 - Add Apple OAuth provider
 - Implement role-based access control (admin vs user)
