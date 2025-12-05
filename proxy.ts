@@ -1,26 +1,86 @@
 // proxy.ts
 // Proxy runs on every request before the page is rendered.
-// We use it for three purposes:
+// We use it for:
 // 1. Add security headers to all responses
 // 2. Protect routes that require authentication
 // 3. Protect admin routes with role-based access control
+// 4. Log security events
 
 import { auth } from '@/auth'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// ✅ OPTIMIZATION 1: Cache admin emails for performance
+let cachedAdminEmails: string[] | null = null
+
+function getAdminEmails(): string[] {
+  if (cachedAdminEmails === null) {
+    cachedAdminEmails =
+      process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || []
+
+    // ✅ Warn if no admin emails configured
+    if (cachedAdminEmails.length === 0) {
+      console.warn('⚠️ No ADMIN_EMAILS configured in environment variables!')
+    }
+  }
+  return cachedAdminEmails
+}
+
+// ✅ OPTIMIZATION 2: Helper to check admin status
+function isAdmin(email: string | null | undefined): boolean {
+  if (!email) return false
+  return getAdminEmails().includes(email)
+}
+
+// ✅ OPTIMIZATION 3: Security event logging
+function logSecurityEvent(
+  event: 'admin_access' | 'unauthorized_attempt' | 'admin_api_access',
+  email: string | undefined,
+  path: string
+) {
+  const timestamp = new Date().toISOString()
+
+  if (event === 'unauthorized_attempt') {
+    console.warn(
+      `[${timestamp}] 🚨 UNAUTHORIZED: ${email || 'anonymous'} → ${path}`
+    )
+  } else {
+    console.log(`[${timestamp}] ✅ ${event.toUpperCase()}: ${email} → ${path}`)
+  }
+
+  // TODO: In production, send to monitoring service (Sentry, DataDog, etc.)
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isDev = process.env.NODE_ENV === 'development'
+
+  // ✅ OPTIMIZATION 4: Skip auth checks for public static assets
+  // This improves performance by not hitting auth for images, etc.
+  const publicPaths = [
+    '/_next',
+    '/favicon.ico',
+    '/robots.txt',
+    '/sitemap.xml',
+    '/api/health', // Add health check endpoint
+  ]
+
+  const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
+
+  if (isPublicPath) {
+    const response = NextResponse.next()
+    // Still add security headers to static assets
+    addSecurityHeaders(response, isDev)
+    return response
+  }
 
   // Get the user session
   const session = await auth()
 
   // ===========================================
-  // ADMIN ROUTE PROTECTION (NEW!)
+  // ADMIN PAGE PROTECTION
   // ===========================================
 
-  // Check if accessing admin routes
   if (pathname.startsWith('/admin')) {
     // Redirect to signin if not authenticated
     if (!session?.user) {
@@ -30,25 +90,22 @@ export async function proxy(request: NextRequest) {
     }
 
     // Check if user has admin role
-    // Admin emails are configured in environment variables
-    const adminEmails =
-      process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || []
-    const isAdmin = adminEmails.includes(session.user.email || '')
+    if (!isAdmin(session.user.email)) {
+      logSecurityEvent('unauthorized_attempt', session.user.email, pathname)
 
-    if (!isAdmin) {
-      // Not an admin - redirect to homepage with error message
-      console.warn(
-        `Unauthorized admin access attempt by: ${session.user.email}`
-      )
-      return NextResponse.redirect(new URL('/?error=unauthorized', request.url))
+      // ✅ OPTIMIZATION 5: Better error handling
+      const errorUrl = new URL('/', request.url)
+      errorUrl.searchParams.set('error', 'unauthorized')
+      errorUrl.searchParams.set('message', 'Admin access required')
+      return NextResponse.redirect(errorUrl)
     }
 
     // Log admin access for security audit trail
-    console.log(`Admin access: ${session.user.email} → ${pathname}`)
+    logSecurityEvent('admin_access', session.user.email, pathname)
   }
 
   // ===========================================
-  // ADMIN API PROTECTION (NEW!)
+  // ADMIN API PROTECTION
   // ===========================================
 
   if (pathname.startsWith('/api/admin')) {
@@ -59,19 +116,16 @@ export async function proxy(request: NextRequest) {
       )
     }
 
-    const adminEmails =
-      process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || []
-    const isAdmin = adminEmails.includes(session.user.email || '')
+    if (!isAdmin(session.user.email)) {
+      logSecurityEvent('unauthorized_attempt', session.user.email, pathname)
 
-    if (!isAdmin) {
-      console.warn(
-        `Unauthorized admin API access attempt by: ${session.user.email}`
-      )
       return NextResponse.json(
         { error: 'Forbidden - Admin access required' },
         { status: 403 }
       )
     }
+
+    logSecurityEvent('admin_api_access', session.user.email, pathname)
   }
 
   // ===========================================
@@ -79,7 +133,7 @@ export async function proxy(request: NextRequest) {
   // ===========================================
 
   // List of routes that require authentication (non-admin)
-  const protectedRoutes = ['/profile']
+  const protectedRoutes = ['/profile', '/settings']
 
   const isProtectedRoute = protectedRoutes.some(route =>
     pathname.startsWith(route)
@@ -98,12 +152,18 @@ export async function proxy(request: NextRequest) {
   }
 
   // ===========================================
-  // SECURITY HEADERS
+  // RETURN WITH SECURITY HEADERS
   // ===========================================
 
   const response = NextResponse.next()
+  addSecurityHeaders(response, isDev)
 
-  // Content Security Policy - now includes picsum.photos
+  return response
+}
+
+// ✅ OPTIMIZATION 6: Extract security headers into reusable function
+function addSecurityHeaders(response: NextResponse, isDev: boolean) {
+  // Content Security Policy
   const csp = isDev
     ? "default-src 'self'; connect-src 'self' https://*.supabase.co ws://localhost:* ws://127.0.0.1:* http://localhost:*; img-src 'self' https://*.supabase.co https://picsum.photos data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
     : "default-src 'self'; connect-src 'self' https://*.supabase.co; img-src 'self' https://*.supabase.co https://picsum.photos data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
@@ -126,7 +186,14 @@ export async function proxy(request: NextRequest) {
     )
   }
 
-  return response
+  // ✅ OPTIMIZATION 7: Add cache control for better performance
+  // Don't cache pages with user-specific content
+  if (response.headers.get('Content-Type')?.includes('text/html')) {
+    response.headers.set(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    )
+  }
 }
 
 export const config = {

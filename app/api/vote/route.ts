@@ -4,6 +4,11 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import {
+  voteRateLimit,
+  getClientIP,
+  getVoteRateLimitKey,
+} from '@/lib/security/ratelimit'
 import crypto from 'crypto'
 
 /**
@@ -22,11 +27,12 @@ import crypto from 'crypto'
  * Error: { error: string }
  *
  * This endpoint demonstrates several important patterns:
- * 1. Input validation to prevent malformed requests
- * 2. IP address hashing for privacy-preserving anonymous voting
- * 3. Database constraints to prevent duplicate votes
- * 4. Proper error handling with appropriate HTTP status codes
- * 5. Returning updated vote counts for optimistic UI updates
+ * 1. Rate limiting to prevent vote manipulation
+ * 2. Input validation to prevent malformed requests
+ * 3. IP address hashing for privacy-preserving anonymous voting
+ * 4. Database constraints to prevent duplicate votes
+ * 5. Proper error handling with appropriate HTTP status codes
+ * 6. Returning updated vote counts for optimistic UI updates
  */
 export async function POST(request: NextRequest) {
   try {
@@ -55,13 +61,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get the user's IP address for anonymous vote tracking
-    // We check multiple headers because different proxy setups use different headers
-    // Vercel uses x-forwarded-for, some use x-real-ip, fallback to connection IP
-    const ip =
-      request.headers.get('x-forwarded-for')?.split(',')[0] ||
-      request.headers.get('x-real-ip') ||
-      'unknown'
+    // Get the client IP address using our helper function
+    const clientIP = getClientIP(request)
+
+    // ========================================
+    // RATE LIMITING - Check BEFORE any DB operations
+    // ========================================
+    // This prevents database abuse even if the vote would ultimately fail
+    const rateLimitKey = getVoteRateLimitKey(clientIP, contest_id)
+    const { success, limit, remaining, reset } = await voteRateLimit.limit(
+      rateLimitKey
+    )
+
+    if (!success) {
+      const resetDate = new Date(reset)
+      const hoursUntilReset = Math.ceil((reset - Date.now()) / (1000 * 60 * 60))
+
+      return NextResponse.json(
+        {
+          error: `You can only vote once per 24 hours. Try again in ${hoursUntilReset} hour${
+            hoursUntilReset !== 1 ? 's' : ''
+          }.`,
+          resetAt: resetDate.toISOString(),
+          limit,
+          remaining: 0,
+        },
+        { status: 429 } // 429 Too Many Requests
+      )
+    }
 
     // Hash the IP address for privacy
     // We never store raw IPs because that would be identifying personal information
@@ -70,7 +97,8 @@ export async function POST(request: NextRequest) {
     const ipHash = crypto
       .createHash('sha256')
       .update(
-        ip + (process.env.IP_HASH_SALT || 'default-salt-change-in-production')
+        clientIP +
+          (process.env.IP_HASH_SALT || 'default-salt-change-in-production')
       )
       .digest('hex')
       .slice(0, 32)
@@ -187,6 +215,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       voteCount: updatedArtwork?.vote_count || 0,
+      remaining: remaining - 1, // How many votes they have left (should be 0)
     })
   } catch (error) {
     // Catch any unexpected errors (JSON parsing, network issues, etc.)

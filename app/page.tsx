@@ -11,8 +11,26 @@ import Image from 'next/image'
 export default async function HomePage() {
   const supabase = await createClient()
 
-  // Fetch the active contest
-  const { data: contestData } = await supabase.rpc('get_active_contest')
+  // Fetch the active contest using direct query (more reliable than RPC function)
+  const { data: contest } = await supabase
+    .from('contests')
+    .select(
+      `
+      id,
+      week_number,
+      title,
+      description,
+      artworks (
+        id,
+        image_url,
+        title
+      )
+    `
+    )
+    .eq('status', 'active')
+    .order('week_number', { ascending: false })
+    .limit(1)
+    .single()
 
   // Fetch some statistics for social proof
   const { count: totalVotes } = await supabase
@@ -25,22 +43,18 @@ export default async function HomePage() {
 
   // Transform contest data if it exists
   let activeContest = null
-  if (contestData && contestData.length > 0) {
-    const firstRow = contestData[0]
+  if (contest) {
     activeContest = {
-      id: firstRow.contest_id,
-      weekNumber: firstRow.contest_week_number,
-      title: firstRow.contest_title,
-      description: firstRow.contest_description,
+      id: contest.id,
+      weekNumber: contest.week_number,
+      title: contest.title,
+      description: contest.description,
       // Get the first 3 artworks for preview
-      artworks: contestData
-        .filter(row => row.artwork_id !== null)
-        .slice(0, 3)
-        .map(row => ({
-          id: row.artwork_id,
-          imageUrl: row.artwork_image_url,
-          title: row.artwork_title,
-        })),
+      artworks: contest.artworks.slice(0, 3).map(artwork => ({
+        id: artwork.id,
+        imageUrl: artwork.image_url,
+        title: artwork.title,
+      })),
     }
   }
 
@@ -98,8 +112,8 @@ export default async function HomePage() {
           </Card>
 
           <Card className="text-center p-8">
-            <div className="text-4xl font-bold text-pink-600 mb-2">6</div>
-            <div className="text-gray-600">Artworks per Week</div>
+            <div className="text-4xl font-bold text-pink-600 mb-2">2-12</div>
+            <div className="text-gray-600">Artworks per Contest</div>
           </Card>
         </div>
 

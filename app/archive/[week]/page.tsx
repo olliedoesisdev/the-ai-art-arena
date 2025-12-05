@@ -11,16 +11,18 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 
 type PageProps = {
-  params: {
+  params: Promise<{
     week: string
-  }
+  }>
 }
 
 // Generate metadata for SEO
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const weekNumber = parseInt(params.week)
+  // In Next.js 15+, params is a Promise and must be awaited
+  const { week } = await params
+  const weekNumber = parseInt(week)
 
   if (isNaN(weekNumber)) {
     return {
@@ -58,8 +60,11 @@ export async function generateMetadata({
 }
 
 export default async function ArchiveDetailPage({ params }: PageProps) {
+  // In Next.js 15+, params is a Promise and must be awaited
+  const { week } = await params
+
   // Parse week number from URL
-  const weekNumber = parseInt(params.week)
+  const weekNumber = parseInt(week)
 
   // Validate week number
   if (isNaN(weekNumber) || weekNumber < 1) {
