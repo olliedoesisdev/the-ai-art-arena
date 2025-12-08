@@ -9,6 +9,7 @@ import {
   getClientIP,
   getVoteRateLimitKey,
 } from '@/lib/security/ratelimit'
+import { validateData, voteSchema } from '@/lib/validators'
 import crypto from 'crypto'
 
 /**
@@ -36,30 +37,15 @@ import crypto from 'crypto'
  */
 export async function POST(request: NextRequest) {
   try {
-    // Parse the JSON body from the request
-    // If the body is not valid JSON, this will throw and we catch it below
+    // Parse and validate the request body with Zod
     const body = await request.json()
-    const { artwork_id, contest_id } = body
+    const validation = validateData(voteSchema, body)
 
-    // Validate that required fields are present
-    // We check for truthiness rather than just existence to catch empty strings
-    if (!artwork_id || !contest_id) {
-      return NextResponse.json(
-        { error: 'Missing required fields: artwork_id and contest_id' },
-        { status: 400 } // 400 Bad Request
-      )
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 })
     }
 
-    // Validate that the IDs are valid UUIDs
-    // This prevents SQL injection attempts and malformed data
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-    if (!uuidRegex.test(artwork_id) || !uuidRegex.test(contest_id)) {
-      return NextResponse.json(
-        { error: 'Invalid UUID format for artwork_id or contest_id' },
-        { status: 400 }
-      )
-    }
+    const { artwork_id, contest_id } = validation.data
 
     // Get the client IP address using our helper function
     const clientIP = getClientIP(request)

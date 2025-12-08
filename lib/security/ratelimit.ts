@@ -67,7 +67,8 @@ export function getClientIP(request: NextRequest): string {
   }
 
   // Fallback to request IP (might be proxy IP in some deployments)
-  return request.ip || 'unknown'
+  // In Next.js, request.ip may not exist on all environments, so provide fallback
+  return (request as any).ip ?? 'unknown'
 }
 
 /**

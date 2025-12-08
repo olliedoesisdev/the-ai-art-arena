@@ -91,7 +91,7 @@ export async function proxy(request: NextRequest) {
 
     // Check if user has admin role
     if (!isAdmin(session.user.email)) {
-      logSecurityEvent('unauthorized_attempt', session.user.email, pathname)
+      logSecurityEvent('unauthorized_attempt', session.user.email ?? undefined, pathname)
 
       // ✅ OPTIMIZATION 5: Better error handling
       const errorUrl = new URL('/', request.url)
@@ -101,7 +101,7 @@ export async function proxy(request: NextRequest) {
     }
 
     // Log admin access for security audit trail
-    logSecurityEvent('admin_access', session.user.email, pathname)
+    logSecurityEvent('admin_access', session.user.email ?? undefined, pathname)
   }
 
   // ===========================================
@@ -117,7 +117,7 @@ export async function proxy(request: NextRequest) {
     }
 
     if (!isAdmin(session.user.email)) {
-      logSecurityEvent('unauthorized_attempt', session.user.email, pathname)
+      logSecurityEvent('unauthorized_attempt', session.user.email ?? undefined, pathname)
 
       return NextResponse.json(
         { error: 'Forbidden - Admin access required' },
@@ -125,7 +125,7 @@ export async function proxy(request: NextRequest) {
       )
     }
 
-    logSecurityEvent('admin_api_access', session.user.email, pathname)
+    logSecurityEvent('admin_api_access', session.user.email ?? undefined, pathname)
   }
 
   // ===========================================

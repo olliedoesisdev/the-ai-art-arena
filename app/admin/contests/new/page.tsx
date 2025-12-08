@@ -11,6 +11,9 @@ export const metadata = {
   description: 'Create a new AI Art Arena contest',
 }
 
+// Force dynamic rendering for admin pages (requires authentication)
+export const dynamic = 'force-dynamic'
+
 export default async function NewContestPage() {
   // Verify admin access (double-check even though middleware protects this)
   const session = await auth()

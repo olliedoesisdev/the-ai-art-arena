@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Metadata } from 'next'
+import type { ArchivedContestRow } from '@/lib/types'
 
 export const metadata: Metadata = {
   title: 'Contest Archive | AI Art Arena',
@@ -41,7 +42,7 @@ export default async function ArchivePage() {
         {/* Archive Grid */}
         {archivedContests && archivedContests.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {archivedContests.map(contest => (
+            {archivedContests.map((contest: ArchivedContestRow) => (
               <Link
                 key={contest.contest_id}
                 href={`/archive/${contest.contest_week_number}`}

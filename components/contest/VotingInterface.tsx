@@ -7,20 +7,10 @@
 import { useState, useTransition } from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
-
-// Define the structure of an artwork object
-// This type ensures we pass the correct data shape to this component
-type Artwork = {
-  id: string
-  imageUrl: string
-  title: string
-  prompt: string | null
-  voteCount: number
-  displayOrder: number
-}
+import type { VotingArtwork } from '@/lib/types'
 
 type VotingInterfaceProps = {
-  artworks: Artwork[]
+  artworks: VotingArtwork[]
   contestId: string
 }
 

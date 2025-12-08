@@ -2,7 +2,7 @@
 // API endpoint for uploading images to Supabase Storage.
 // Protected by admin middleware - only admins can upload.
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -39,14 +39,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
+    // Use admin client to bypass RLS
+    const supabaseAdmin = await createAdminClient()
 
     // Convert File to ArrayBuffer
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
+    // Upload to Supabase Storage (using admin client)
+    const { data, error } = await supabaseAdmin.storage
       .from(bucket)
       .upload(fileName, buffer, {
         contentType: file.type,
@@ -61,10 +62,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get public URL
+    // Get public URL (using admin client)
     const {
       data: { publicUrl },
-    } = supabase.storage.from(bucket).getPublicUrl(data.path)
+    } = supabaseAdmin.storage.from(bucket).getPublicUrl(data.path)
 
     return NextResponse.json({
       url: publicUrl,
@@ -78,4 +79,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-  

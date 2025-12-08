@@ -9,11 +9,21 @@ import Image from 'next/image'
 import { Card } from '@/components/ui/Card'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
+import type { ContestByWeekRow } from '@/lib/types'
 
 type PageProps = {
   params: Promise<{
     week: string
   }>
+}
+
+type TransformedArtwork = {
+  id: string
+  imageUrl: string
+  title: string
+  prompt: string | null
+  voteCount: number
+  displayOrder: number
 }
 
 // Generate metadata for SEO
@@ -43,8 +53,8 @@ export async function generateMetadata({
 
   const contest = data[0]
   const artworkImages = data
-    .filter(row => row.artwork_image_url)
-    .map(row => row.artwork_image_url)
+    .filter((row: ContestByWeekRow) => row.artwork_image_url)
+    .map((row: ContestByWeekRow) => row.artwork_image_url as string)
 
   return {
     title: `${contest.contest_title} - Week ${weekNumber} | AI Art Arena`,
@@ -95,21 +105,21 @@ export default async function ArchiveDetailPage({ params }: PageProps) {
   }
 
   // Get all artworks sorted by vote count (winner first)
-  const artworks = data
-    .filter(row => row.artwork_id !== null)
-    .map(row => ({
-      id: row.artwork_id,
-      imageUrl: row.artwork_image_url,
-      title: row.artwork_title,
+  const artworks: TransformedArtwork[] = data
+    .filter((row: ContestByWeekRow) => row.artwork_id !== null)
+    .map((row: ContestByWeekRow): TransformedArtwork => ({
+      id: row.artwork_id as string,
+      imageUrl: row.artwork_image_url as string,
+      title: row.artwork_title as string,
       prompt: row.artwork_prompt,
-      voteCount: row.artwork_vote_count,
-      displayOrder: row.artwork_display_order,
+      voteCount: row.artwork_vote_count as number,
+      displayOrder: row.artwork_display_order as number,
     }))
-    .sort((a, b) => b.voteCount - a.voteCount) // Sort by votes descending
+    .sort((a: TransformedArtwork, b: TransformedArtwork) => b.voteCount - a.voteCount) // Sort by votes descending
 
   const winner = artworks[0]
   const totalVotes = artworks.reduce(
-    (sum, artwork) => sum + artwork.voteCount,
+    (sum: number, artwork: TransformedArtwork) => sum + artwork.voteCount,
     0
   )
 
@@ -240,7 +250,7 @@ export default async function ArchiveDetailPage({ params }: PageProps) {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-            {artworks.map((artwork, index) => (
+            {artworks.map((artwork: TransformedArtwork, index: number) => (
               <Card key={artwork.id} className="overflow-hidden">
                 {/* Ranking Badge */}
                 <div className="relative">
