@@ -191,3 +191,28 @@ export function validateData<T>(
     return { success: false, error: 'Validation failed' }
   }
 }
+
+// Alternative helper with detailed error information
+export function validateBody<T>(
+  schema: z.ZodSchema<T>,
+  data: unknown
+):
+  | { success: true; data: T }
+  | { success: false; error: string; details: any[] } {
+  const result = schema.safeParse(data)
+
+  if (!result.success) {
+    const firstError = result.error.issues[0]
+    const message = firstError
+      ? `${firstError.path.join('.')}: ${firstError.message}`
+      : 'Invalid input'
+
+    return {
+      success: false,
+      error: message,
+      details: result.error.issues,
+    }
+  }
+
+  return { success: true, data: result.data }
+}

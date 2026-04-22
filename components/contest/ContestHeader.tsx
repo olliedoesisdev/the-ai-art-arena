@@ -39,7 +39,7 @@ export function ContestHeader({
 
       {/* Description if provided */}
       {description && (
-        <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto line-clamp-3">
           {description}
         </p>
       )}

@@ -32,15 +32,13 @@ export default async function HomePage() {
     .limit(1)
     .single()
 
-  // Fetch some statistics for social proof
-  const { count: totalVotes } = await supabase
-    .from('votes')
-    .select('*', { count: 'exact', head: true })
-
-  const { count: totalContests } = await supabase
-    .from('contests')
-    .select('*', { count: 'exact', head: true })
-
+  const [
+    { count: totalVotes },
+    { count: totalContests },
+  ] = await Promise.all([
+    supabase.from('votes').select('*', { count: 'exact', head: true }),
+    supabase.from('contests').select('*', { count: 'exact', head: true }).eq('status', 'archived'),
+  ])
   // Transform contest data if it exists
   let activeContest = null
   if (contest) {
@@ -99,21 +97,21 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-16">
           <Card className="text-center p-8">
             <div className="text-4xl font-bold text-blue-600 mb-2">
-              {totalVotes || 0}
+              {totalVotes ?? 0}
             </div>
             <div className="text-gray-600">Total Votes Cast</div>
           </Card>
 
           <Card className="text-center p-8">
             <div className="text-4xl font-bold text-purple-600 mb-2">
-              {totalContests || 0}
+              {totalContests ?? 0}
             </div>
-            <div className="text-gray-600">Contests Held</div>
+            <div className="text-gray-600">Contests Completed</div>
           </Card>
 
           <Card className="text-center p-8">
-            <div className="text-4xl font-bold text-pink-600 mb-2">2-12</div>
-            <div className="text-gray-600">Artworks per Contest</div>
+            <div className="text-4xl font-bold text-pink-600 mb-2">Weekly</div>
+            <div className="text-gray-600">New Contest Every Week</div>
           </Card>
         </div>
 

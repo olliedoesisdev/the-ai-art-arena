@@ -22,8 +22,21 @@ type ContestTimerProps = {
  * 5. Graceful handling of contests that have already ended
  */
 export function ContestTimer({ endDate }: ContestTimerProps) {
-  const [timeLeft, setTimeLeft] = useState<string>('')
-  const [hasEnded, setHasEnded] = useState(false)
+  const getInitialTimeLeft = () => {
+    const difference = new Date(endDate).getTime() - Date.now()
+    if (difference <= 0) return 'Voting has ended'
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((difference / (1000 * 60 * 60)) % 24)
+    const minutes = Math.floor((difference / (1000 * 60)) % 60)
+    const seconds = Math.floor((difference / 1000) % 60)
+    if (days > 0) return `${days}d ${hours}h ${minutes}m remaining`
+    if (hours > 0) return `${hours}h ${minutes}m ${seconds}s remaining`
+    if (minutes > 0) return `${minutes}m ${seconds}s remaining`
+    return `${seconds}s remaining`
+  }
+
+  const [timeLeft, setTimeLeft] = useState<string>(getInitialTimeLeft)
+  const [hasEnded, setHasEnded] = useState(() => new Date(endDate).getTime() - Date.now() <= 0)
 
   useEffect(() => {
     // Function to calculate and format the time remaining
@@ -91,7 +104,7 @@ export function ContestTimer({ endDate }: ContestTimerProps) {
           hasEnded ? 'text-gray-500' : 'text-gray-900'
         }`}
       >
-        {timeLeft || 'Calculating...'}
+        {timeLeft}
       </span>
     </div>
   )

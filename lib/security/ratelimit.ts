@@ -86,3 +86,12 @@ export function getVoteRateLimitKey(ip: string, contestId: string): string {
 export function getApiRateLimitKey(ip: string): string {
   return ip
 }
+
+/**
+ * Format time-until-reset for user-facing error messages
+ */
+export function formatResetTime(resetMs: number): string {
+  const hoursUntilReset = Math.ceil((resetMs - Date.now()) / (1000 * 60 * 60))
+  if (hoursUntilReset <= 1) return '1 hour'
+  return `${hoursUntilReset} hours`
+}

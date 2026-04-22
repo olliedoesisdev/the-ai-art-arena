@@ -129,32 +129,43 @@ export default async function ContestPage({ params }: PageProps) {
   }
 
   // Check if contest is active
-  // If not active, show a message instead of the voting interface
+  // If not active, show a contextual message instead of the voting interface
   if (contest.status !== 'active') {
     const isArchived = contest.status === 'archived'
+    const isUpcoming = contest.status === 'upcoming'
+
+    const startDate = isUpcoming
+      ? new Date(contest.start_date).toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+        })
+      : null
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="text-6xl mb-4">{isArchived ? '🏁' : '⏳'}</div>
+          <div className="text-6xl mb-4">{isArchived ? '🏁' : '📅'}</div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {isArchived ? 'Contest Ended' : 'Contest Not Active'}
+            {isArchived ? 'Contest Ended' : 'Coming Soon'}
           </h1>
           <p className="text-gray-600 mb-6">
             {isArchived
-              ? 'This contest has ended. Check out the archive to see the winner!'
+              ? 'This contest has ended. Check the archive to see the winner!'
+              : startDate
+              ? `Voting opens on ${startDate}. Check back then!`
               : 'This contest is not yet open for voting. Check back soon!'}
           </p>
           {isArchived && (
             <a
               href={`/archive/${contest.week_number}`}
-              className="text-blue-600 hover:underline font-medium"
+              className="inline-block px-5 py-2.5 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors mb-4"
             >
               View Results →
             </a>
           )}
           <div className="mt-4">
-            <a href="/" className="text-gray-500 hover:text-gray-700">
+            <a href="/" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
               ← Back to Home
             </a>
           </div>

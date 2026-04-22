@@ -21,12 +21,6 @@ const nextConfig = {
         hostname: '**.supabase.in',
         pathname: '/storage/v1/object/public/**',
       },
-      // Optional: Remove this if you're not using picsum for testing
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-        pathname: '/**',
-      },
     ],
 
     // Image format preference: AVIF is smaller than WebP but slower to encode.

@@ -141,6 +141,27 @@ export type ContestHeaderData = {
   endDate: string
 }
 
+// Additional component prop interfaces for voting system
+export interface ArtworkCardProps {
+  artwork: Artwork
+  rank?: number
+  isWinner?: boolean
+  showVoteCount?: boolean
+}
+
+export interface VotingInterfaceProps {
+  artworks: Artwork[]
+  contestId: string
+  initialVotedArtworkId?: string | null
+}
+
+export interface ContestHeaderProps {
+  weekNumber: number
+  endDate: string
+  status: Contest['status']
+  totalVotes: number
+}
+
 // ==========================================
 // API REQUEST/RESPONSE TYPES
 // ==========================================
@@ -148,18 +169,18 @@ export type ContestHeaderData = {
 /**
  * Vote API response
  */
-export type VoteResponse =
-  | {
-      success: true
-      voteCount: number
-      remaining: number
-    }
-  | {
-      error: string
-      resetAt?: string
-      limit?: number
-      remaining?: number
-    }
+export interface VoteResponse {
+  success: boolean
+  voteCount: number
+  remaining: number
+}
+
+export interface VoteError {
+  error: string
+  resetAt?: string
+  limit?: number
+  remaining?: number
+}
 
 /**
  * Contest creation response

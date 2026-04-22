@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create artworks (using admin client)
-    const artworksWithContestId = artworks.map((artwork: any) => ({
+    const artworksWithContestId = artworks.map((artwork) => ({
       contest_id: contest.id,
       title: artwork.title,
       image_url: artwork.image_url,
@@ -91,6 +91,35 @@ export async function POST(request: NextRequest) {
       { error: 'Failed to create contest' },
       { status: 500 }
     )
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { id } = body
+
+    if (!id || typeof id !== 'string') {
+      return NextResponse.json({ error: 'Contest ID is required' }, { status: 400 })
+    }
+
+    const supabaseAdmin = await createAdminClient()
+
+    const { error } = await supabaseAdmin
+      .from('contests')
+      .update({ status: 'archived' })
+      .eq('id', id)
+      .eq('status', 'active') // safety: only archive active contests
+
+    if (error) {
+      console.error('Contest archive error:', error)
+      return NextResponse.json({ error: 'Failed to archive contest' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Contest archive error:', error)
+    return NextResponse.json({ error: 'Failed to archive contest' }, { status: 500 })
   }
 }
 
